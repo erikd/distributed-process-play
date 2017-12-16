@@ -23,7 +23,7 @@ absence of communication errors, all nodes should print out the same final tuple
 
 * The nodes need to sort the messages based on send time rather than the receive
   time. That means the message protocol needs to send both a time stamp and the
-  random value in each message. It also means that in this exercise we have to
+  random value in each message. It also means that in this exercise I have to
   assume that the system time on each node has already been synchronised to some
   global reference. In the absence of this assumption, the correct approach
   might be to do time synchronisation when the nodes first connect. One of the
@@ -69,7 +69,7 @@ absence of communication errors, all nodes should print out the same final tuple
   package. I've used the `Data.Vector.Algorithms.Tim` module for a similar
   problem in the past.
 
-* During the second epoch, we need to wait for messages, do a calculation and
+* During the second epoch, I need to wait for messages, do a calculation and
   print a result before the end of that epoch. Would be nice to know definitively
   if the sending node has finished. This suggests that there are two types of
   message, a message that holds the `(timestamp, random)` pair and a message
@@ -78,4 +78,29 @@ absence of communication errors, all nodes should print out the same final tuple
   validate the receive count. Also need to have a timeout so that if the
   terminating is not received, the process can still do a calculation on the
   values it has received and print that out.
+
+
+# Known unknowns
+
+* How is the start of the first epoch determined? It is not possible to guarantee
+  that all nodes start simultaneously.
+
+* How can the receiver know that all messages have been received and it should
+  start calculating? Maybe I can build into the protocol an `EndOfMessages`
+  message and wait until it receive one of these from each node to begin the
+  calculation. Could also wait until some length of time before the end of
+  epoch two at which to calculate the result in case one of more of the
+  `EndOfMessage` messages gets lost. Maybe the last node to start could send
+  all other nodes a `StartFirstEpoch` message to kick things off.
+
+* How do I signal to the sending thread that its time to switch from the first
+  epoch to the second and that no more messages should be sent? Similarly, how
+  do I signal to the receiving thread that the second epoch has finished and
+  the calculations should be done. If I want a really tight inner sending
+  loop I might want to use a custom exception type and add an exception handler
+  around the send loop, and in the exception handler, send `EndOfMessages` to
+  all the receivers and then call the function to do the calculation.
+
+* Don't yet understand distributed-process well enough but will probably need
+  threads and should use the `async` library for that.
 
